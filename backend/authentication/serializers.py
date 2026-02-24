@@ -20,14 +20,14 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         
         if user and user.check_password(password):
             if not user.is_active:
-                raise serializers.ValidationError('Your account is inactive. Please contact support.')
+                raise serializers.ValidationError({"general": ["Your account is inactive. Please contact support."]})
             attrs['username'] = user.username
             return super().validate(attrs)
         
         if not User.objects.filter(Q(email=identifier) | Q(username=identifier)).exists():
-            raise serializers.ValidationError('No account found with that username or email.')
+            raise serializers.ValidationError({"identifier": ["No account found with that username or email."]})
         
-        raise serializers.ValidationError('Incorrect password. Please try again.')
+        raise serializers.ValidationError({"password": ["Incorrect password. Please try again."]})
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
@@ -16,7 +16,6 @@ import {
     Sun,
     Moon
 } from 'lucide-react';
-import { toast } from 'react-hot-toast';
 import { cn } from '../utils/cn';
 import { parseApiError } from '../utils/api';
 
@@ -30,6 +29,7 @@ const ProfilePage = () => {
     const [editValue, setEditValue] = useState('');
     const [isUpdating, setIsUpdating] = useState(false);
     const [fieldErrors, setFieldErrors] = useState({});
+    const [editSuccess, setEditSuccess] = useState(false);
 
     // Password state
     const [showPasswordSection, setShowPasswordSection] = useState(false);
@@ -45,6 +45,21 @@ const ProfilePage = () => {
     });
     const [isChangingPassword, setIsChangingPassword] = useState(false);
     const [passwordErrors, setPasswordErrors] = useState({});
+    const [passwordSuccess, setPasswordSuccess] = useState(false);
+
+    useEffect(() => {
+        if (editSuccess) {
+            const timer = setTimeout(() => setEditSuccess(false), 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [editSuccess]);
+
+    useEffect(() => {
+        if (passwordSuccess) {
+            const timer = setTimeout(() => setPasswordSuccess(false), 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [passwordSuccess]);
 
     if (!user) return null;
 
@@ -52,6 +67,7 @@ const ProfilePage = () => {
         setEditingField(field);
         setEditValue(value);
         setFieldErrors({});
+        setEditSuccess(false);
     };
 
     const handleCancelEdit = () => {
@@ -60,8 +76,19 @@ const ProfilePage = () => {
         setFieldErrors({});
     };
 
+    const handleEditValueChange = (e) => {
+        const val = editingField === 'username' ? e.target.value.toLowerCase() : e.target.value;
+        setEditValue(val);
+        setFieldErrors(prev => ({ ...prev, [editingField]: '', general: '' }));
+    };
+
     const handleSaveEdit = async () => {
-        if (!editValue.trim() || editValue === user[editingField]) {
+        if (!editValue.trim()) {
+            setFieldErrors({ [editingField]: 'Field cannot be empty' });
+            return;
+        }
+
+        if (editValue === user[editingField]) {
             handleCancelEdit();
             return;
         }
@@ -72,30 +99,40 @@ const ProfilePage = () => {
             const success = await updateUser({ [editingField]: editValue.trim() });
             if (success) {
                 setEditingField(null);
+                setEditSuccess(true);
             }
         } catch (err) {
-            const errorMsg = parseApiError(err);
-            toast.error(errorMsg);
             if (err.response?.data && typeof err.response.data === 'object') {
                 setFieldErrors(err.response.data);
+            } else {
+                setFieldErrors({ general: parseApiError(err) });
             }
         } finally {
             setIsUpdating(false);
         }
     };
 
+    const handlePasswordInputChange = (field) => (e) => {
+        setPasswordData(prev => ({ ...prev, [field]: e.target.value }));
+        setPasswordErrors(prev => ({ ...prev, [field]: '', general: '' }));
+    };
+
     const handlePasswordChange = async (e) => {
         e.preventDefault();
         setPasswordErrors({});
+        setPasswordSuccess(false);
+
+        let newErrors = {};
 
         if (passwordData.new_password !== passwordData.confirm_new_password) {
-            toast.error("Passwords do not match");
-            setPasswordErrors({ confirm_new_password: "Passwords do not match" });
-            return;
+            newErrors.confirm_new_password = "Passwords do not match";
         }
         if (passwordData.new_password.length < 8) {
-            toast.error("Password must be at least 8 characters");
-            setPasswordErrors({ new_password: "Password must be at least 8 characters" });
+            newErrors.new_password = "Password must be at least 8 characters";
+        }
+
+        if (Object.keys(newErrors).length > 0) {
+            setPasswordErrors(newErrors);
             return;
         }
 
@@ -106,12 +143,13 @@ const ProfilePage = () => {
                 setShowPasswordSection(false);
                 setPasswordData({ old_password: '', new_password: '', confirm_new_password: '' });
                 setPasswordErrors({});
+                setPasswordSuccess(true);
             }
         } catch (err) {
-            const errorMsg = parseApiError(err);
-            toast.error(errorMsg);
             if (err.response?.data && typeof err.response.data === 'object') {
                 setPasswordErrors(err.response.data);
+            } else {
+                setPasswordErrors({ general: parseApiError(err) });
             }
         } finally {
             setIsChangingPassword(false);
@@ -183,7 +221,7 @@ const ProfilePage = () => {
                                         <input
                                             autoFocus
                                             value={editValue}
-                                            onChange={(e) => setEditValue(e.target.value)}
+                                            onChange={handleEditValueChange}
                                             className="flex-1 bg-transparent outline-none"
                                             placeholder="Enter your name"
                                         />
@@ -233,7 +271,7 @@ const ProfilePage = () => {
                                         <input
                                             autoFocus
                                             value={editValue}
-                                            onChange={(e) => setEditValue(e.target.value.toLowerCase())}
+                                            onChange={handleEditValueChange}
                                             className="flex-1 bg-transparent outline-none"
                                             placeholder="Enter username"
                                         />
@@ -270,12 +308,23 @@ const ProfilePage = () => {
                                 <p className="text-red-500 text-xs mt-1">{fieldErrors.username}</p>
                             )}
                         </div>
+
+                        {editSuccess && (
+                            <p className="text-green-500 text-sm font-medium animate-fade-in text-center">Success!</p>
+                        )}
+                        {fieldErrors.general && (
+                            <p className="text-red-500 text-xs text-center">{fieldErrors.general}</p>
+                        )}
                     </div>
 
                     {/* Change Password Section */}
                     <div className="mt-10 pt-6 border-t border-(--border)">
                         <button
-                            onClick={() => setShowPasswordSection(!showPasswordSection)}
+                            onClick={() => {
+                                setShowPasswordSection(!showPasswordSection);
+                                setPasswordSuccess(false);
+                                setPasswordErrors({});
+                            }}
                             className="flex items-center gap-2 text-sm text-foreground/60 hover:text-foreground transition-all group cursor-pointer"
                         >
                             <Lock size={16} />
@@ -294,13 +343,14 @@ const ProfilePage = () => {
                                 >
                                     <div className="space-y-4">
                                         <div>
-                                            <label className="block text-sm font-medium mb-1">Old Password</label>
+                                            <label className="block text-sm font-medium mb-1" htmlFor="old_password">Old Password</label>
                                             <div className="relative">
                                                 <input
+                                                    id="old_password"
                                                     type={showPasswords.old ? "text" : "password"}
                                                     required
                                                     value={passwordData.old_password}
-                                                    onChange={(e) => setPasswordData({ ...passwordData, old_password: e.target.value })}
+                                                    onChange={handlePasswordInputChange('old_password')}
                                                     className={cn(
                                                         "w-full px-4 py-3 rounded-lg border bg-(--input-bg) outline-none focus:border-[#10a37f] transition-all pr-10",
                                                         passwordErrors.old_password ? "border-red-500" : "border-(--border)"
@@ -319,13 +369,14 @@ const ProfilePage = () => {
                                             )}
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium mb-1">New Password</label>
+                                            <label className="block text-sm font-medium mb-1" htmlFor="new_password">New Password</label>
                                             <div className="relative">
                                                 <input
+                                                    id="new_password"
                                                     type={showPasswords.new ? "text" : "password"}
                                                     required
                                                     value={passwordData.new_password}
-                                                    onChange={(e) => setPasswordData({ ...passwordData, new_password: e.target.value })}
+                                                    onChange={handlePasswordInputChange('new_password')}
                                                     className={cn(
                                                         "w-full px-4 py-3 rounded-lg border bg-(--input-bg) outline-none focus:border-[#10a37f] transition-all pr-10",
                                                         passwordErrors.new_password ? "border-red-500" : "border-(--border)"
@@ -344,13 +395,14 @@ const ProfilePage = () => {
                                             )}
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium mb-1">Confirm New Password</label>
+                                            <label className="block text-sm font-medium mb-1" htmlFor="confirm_new_password">Confirm New Password</label>
                                             <div className="relative">
                                                 <input
+                                                    id="confirm_new_password"
                                                     type={showPasswords.confirm ? "text" : "password"}
                                                     required
                                                     value={passwordData.confirm_new_password}
-                                                    onChange={(e) => setPasswordData({ ...passwordData, confirm_new_password: e.target.value })}
+                                                    onChange={handlePasswordInputChange('confirm_new_password')}
                                                     className={cn(
                                                         "w-full px-4 py-3 rounded-lg border bg-(--input-bg) outline-none focus:border-[#10a37f] transition-all pr-10",
                                                         passwordErrors.confirm_new_password ? "border-red-500" : "border-(--border)"
@@ -369,18 +421,26 @@ const ProfilePage = () => {
                                             )}
                                         </div>
                                     </div>
-                                    <button
-                                        type="submit"
-                                        disabled={isChangingPassword}
-                                        className="w-full bg-[#10a37f] hover:bg-[#1a7f64] text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-[#10a37f]/20 flex items-center justify-center cursor-pointer mt-2"
-                                    >
-                                        {isChangingPassword ? (
-                                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                                        ) : "Update Password"}
-                                    </button>
+                                    <div className="pt-2">
+                                        <button
+                                            type="submit"
+                                            disabled={isChangingPassword}
+                                            className="w-full bg-[#10a37f] hover:bg-[#1a7f64] text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-[#10a37f]/20 flex items-center justify-center cursor-pointer"
+                                        >
+                                            {isChangingPassword ? (
+                                                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                            ) : "Update Password"}
+                                        </button>
+                                        {passwordErrors.general && (
+                                            <p className="text-red-500 text-xs mt-2 text-center">{passwordErrors.general}</p>
+                                        )}
+                                    </div>
                                 </motion.form>
                             )}
                         </AnimatePresence>
+                        {passwordSuccess && (
+                            <p className="text-green-500 text-sm font-medium animate-fade-in text-center mt-2">Success!</p>
+                        )}
                     </div>
                 </motion.div>
             </div>

@@ -2,24 +2,33 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
 import { Bot, ArrowRight, User } from 'lucide-react';
-import { toast } from 'react-hot-toast';
 import { parseApiError } from '../../utils/api';
 
 const SetNameModal = () => {
     const { user, updateUser } = useAuth();
     const [name, setName] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [error, setError] = useState('');
 
     if (!user || user.name_set) return null;
 
+    const handleNameChange = (e) => {
+        setName(e.target.value);
+        setError('');
+    };
+
     const handleSubmit = async (e) => {
         e?.preventDefault();
-        if (!name.trim()) return;
+        if (!name.trim()) {
+            setError('Please enter a name');
+            return;
+        }
         setIsSubmitting(true);
+        setError('');
         try {
             await updateUser({ name: name.trim() });
         } catch (err) {
-            toast.error(parseApiError(err));
+            setError(parseApiError(err));
         } finally {
             setIsSubmitting(false);
         }
@@ -27,10 +36,11 @@ const SetNameModal = () => {
 
     const handleSkip = async () => {
         setIsSubmitting(true);
+        setError('');
         try {
             await updateUser({ name: user.username });
         } catch (err) {
-            toast.error(parseApiError(err));
+            setError(parseApiError(err));
         } finally {
             setIsSubmitting(false);
         }
@@ -57,18 +67,23 @@ const SetNameModal = () => {
                         <p className="text-foreground/60 mb-8">What should we call you?</p>
 
                         <form onSubmit={handleSubmit} className="space-y-6">
-                            <div className="relative">
-                                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-foreground/40">
-                                    <User size={18} />
+                            <div className="relative text-left">
+                                <div className="relative">
+                                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-foreground/40">
+                                        <User size={18} />
+                                    </div>
+                                    <input
+                                        type="text"
+                                        autoFocus
+                                        placeholder="Your preferred name"
+                                        value={name}
+                                        onChange={handleNameChange}
+                                        className={`w-full pl-12 pr-4 py-4 rounded-xl border bg-(--input-bg) outline-none transition-all text-lg ${error ? 'border-red-500' : 'border-(--border) focus:border-[#10a37f] focus:ring-1 focus:ring-[#10a37f]'}`}
+                                    />
                                 </div>
-                                <input
-                                    type="text"
-                                    autoFocus
-                                    placeholder="Your preferred name"
-                                    value={name}
-                                    onChange={(e) => setName(e.target.value)}
-                                    className="w-full pl-12 pr-4 py-4 rounded-xl border border-(--border) bg-(--input-bg) focus:border-[#10a37f] focus:ring-1 focus:ring-[#10a37f] outline-none transition-all text-lg"
-                                />
+                                {error && (
+                                    <p className="text-red-500 text-xs mt-2 text-center">{error}</p>
+                                )}
                             </div>
 
                             <button

@@ -57,7 +57,7 @@ const MessageList = ({ messages, isSidebarOpen = true, isResponding, isMobile })
     return (
         <div className={cn(
             "flex flex-col gap-8 py-8 mx-auto px-4 transition-all duration-300",
-            isSidebarOpen && !isMobile ? "max-w-[850px]" : "max-w-5xl"
+            isSidebarOpen && !isMobile ? "max-w-3xl" : "max-w-5xl"
         )}>
             {messages.map((msg, idx) => {
                 const isLast = idx === messages.length - 1;
@@ -101,18 +101,10 @@ const MessageList = ({ messages, isSidebarOpen = true, isResponding, isMobile })
                                 )}>
                                     {msg.role === 'user' ? (
                                         <div className="whitespace-pre-wrap word-break-all">{msg.content}</div>
-                                    ) : isStreaming ? (
-                                        // During streaming: render as plain text to avoid ReactMarkdown
-                                        // showing raw markdown symbols from incomplete/partial chunks.
-                                        // Once done, MarkdownRenderer takes over with full formatting.
-                                        <div className="whitespace-pre-wrap leading-[1.75] text-[15px]">
-                                            {msg.content}
-                                            <span className="inline-block ml-0.5 text-(--button-primary) font-bold animate-pulse" aria-hidden="true">▍</span>
-                                        </div>
                                     ) : (
                                         <MarkdownRenderer
                                             content={msg.content}
-                                            isStreaming={false}
+                                            isStreaming={isStreaming}
                                         />
                                     )}
                                 </div>

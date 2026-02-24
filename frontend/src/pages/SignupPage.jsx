@@ -13,7 +13,7 @@ const SignupPage = () => {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-    const [fieldErrors, setFieldErrors] = useState({});
+    const [errors, setErrors] = useState({});
     const { register } = useAuth();
     const { theme, toggleTheme } = useTheme();
     const navigate = useNavigate();
@@ -22,27 +22,41 @@ const SignupPage = () => {
         return email.includes('@') && email.includes('.');
     };
 
+    const handleInputChange = (field, setter) => (e) => {
+        setter(e.target.value);
+        setErrors(prev => ({ ...prev, [field]: '', general: '' }));
+    };
+
+    const handleUsernameChange = (e) => {
+        const val = e.target.value.toLowerCase();
+        setUsername(val);
+        setErrors(prev => ({ ...prev, username: '', general: '' }));
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setFieldErrors({});
+        setErrors({});
+
+        let newErrors = {};
 
         if (!username.trim()) {
-            toast.error('Please enter a username');
-            return;
+            newErrors.username = 'Please enter a username';
         }
 
         if (!validateEmail(email)) {
-            toast.error('Please enter a valid email address');
-            return;
+            newErrors.email = 'Please enter a valid email address';
         }
 
         if (password.length < 8) {
-            toast.error('Password must be at least 8 characters long');
-            return;
+            newErrors.password = 'Password must be at least 8 characters long';
         }
 
         if (password !== confirmPassword) {
-            toast.error('Passwords do not match');
+            newErrors.confirm_password = 'Passwords do not match';
+        }
+
+        if (Object.keys(newErrors).length > 0) {
+            setErrors(newErrors);
             return;
         }
 
@@ -52,17 +66,12 @@ const SignupPage = () => {
                 navigate('/login');
             }
         } catch (err) {
-            const errorMsg = parseApiError(err);
-            toast.error(errorMsg);
             if (err.response?.data && typeof err.response.data === 'object') {
-                setFieldErrors(err.response.data);
+                setErrors(err.response.data);
+            } else {
+                setErrors({ general: parseApiError(err) });
             }
         }
-    };
-
-    const handleUsernameChange = (e) => {
-        const val = e.target.value;
-        setUsername(val.toLowerCase());
     };
 
     return (
@@ -106,11 +115,11 @@ const SignupPage = () => {
                                 required
                                 value={username}
                                 onChange={handleUsernameChange}
-                                className={`w-full px-4 py-3 rounded-lg border bg-background text-foreground focus:border-[#10a37f] focus:ring-1 focus:ring-[#10a37f] outline-none transition-all ${fieldErrors.username ? 'border-red-500' : 'border-border'}`}
+                                className={`w-full px-4 py-3 rounded-lg border bg-background text-foreground focus:border-[#10a37f] focus:ring-1 focus:ring-[#10a37f] outline-none transition-all ${errors.username ? 'border-red-500' : 'border-border'}`}
                                 placeholder="Username"
                             />
-                            {fieldErrors.username && (
-                                <p className="text-red-500 text-xs mt-1">{fieldErrors.username}</p>
+                            {errors.username && (
+                                <p className="text-red-500 text-xs mt-1">{errors.username}</p>
                             )}
                         </div>
                         <div>
@@ -119,12 +128,12 @@ const SignupPage = () => {
                                 type="email"
                                 required
                                 value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                className={`w-full px-4 py-3 rounded-lg border bg-background text-foreground focus:border-[#10a37f] focus:ring-1 focus:ring-[#10a37f] outline-none transition-all ${fieldErrors.email ? 'border-red-500' : 'border-border'}`}
+                                onChange={handleInputChange('email', setEmail)}
+                                className={`w-full px-4 py-3 rounded-lg border bg-background text-foreground focus:border-[#10a37f] focus:ring-1 focus:ring-[#10a37f] outline-none transition-all ${errors.email ? 'border-red-500' : 'border-border'}`}
                                 placeholder="name@example.com"
                             />
-                            {fieldErrors.email && (
-                                <p className="text-red-500 text-xs mt-1">{fieldErrors.email}</p>
+                            {errors.email && (
+                                <p className="text-red-500 text-xs mt-1">{errors.email}</p>
                             )}
                         </div>
                         <div>
@@ -134,8 +143,8 @@ const SignupPage = () => {
                                     type={showPassword ? "text" : "password"}
                                     required
                                     value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    className={`w-full px-4 py-3 rounded-lg border bg-background text-foreground focus:border-[#10a37f] focus:ring-1 focus:ring-[#10a37f] outline-none transition-all pr-12 ${fieldErrors.password ? 'border-red-500' : 'border-border'}`}
+                                    onChange={handleInputChange('password', setPassword)}
+                                    className={`w-full px-4 py-3 rounded-lg border bg-background text-foreground focus:border-[#10a37f] focus:ring-1 focus:ring-[#10a37f] outline-none transition-all pr-12 ${errors.password ? 'border-red-500' : 'border-border'}`}
                                     placeholder="Create password"
                                 />
                                 <button
@@ -146,8 +155,8 @@ const SignupPage = () => {
                                     {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                                 </button>
                             </div>
-                            {fieldErrors.password && (
-                                <p className="text-red-500 text-xs mt-1">{fieldErrors.password}</p>
+                            {errors.password && (
+                                <p className="text-red-500 text-xs mt-1">{errors.password}</p>
                             )}
                         </div>
                         <div>
@@ -157,8 +166,8 @@ const SignupPage = () => {
                                     type={showConfirmPassword ? "text" : "password"}
                                     required
                                     value={confirmPassword}
-                                    onChange={(e) => setConfirmPassword(e.target.value)}
-                                    className={`w-full px-4 py-3 rounded-lg border bg-background text-foreground focus:border-[#10a37f] focus:ring-1 focus:ring-[#10a37f] outline-none transition-all pr-12 ${fieldErrors.confirm_password ? 'border-red-500' : 'border-border'}`}
+                                    onChange={handleInputChange('confirm_password', setConfirmPassword)}
+                                    className={`w-full px-4 py-3 rounded-lg border bg-background text-foreground focus:border-[#10a37f] focus:ring-1 focus:ring-[#10a37f] outline-none transition-all pr-12 ${errors.confirm_password ? 'border-red-500' : 'border-border'}`}
                                     placeholder="Confirm password"
                                 />
                                 <button
@@ -169,16 +178,23 @@ const SignupPage = () => {
                                     {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                                 </button>
                             </div>
-                            {fieldErrors.confirm_password && (
-                                <p className="text-red-500 text-xs mt-1">{fieldErrors.confirm_password}</p>
+                            {errors.confirm_password && (
+                                <p className="text-red-500 text-xs mt-1">{errors.confirm_password}</p>
                             )}
                         </div>
-                        <button
-                            type="submit"
-                            className="w-full bg-[#10a37f] hover:bg-[#1a7f64] hover:cursor-pointer text-white font-semibold py-3 rounded-lg transition-colors mt-2"
-                        >
-                            Continue
-                        </button>
+                        <div className="pt-2">
+                            <button
+                                type="submit"
+                                className="w-full bg-[#10a37f] hover:bg-[#1a7f64] hover:cursor-pointer text-white font-semibold py-3 rounded-lg transition-colors"
+                            >
+                                Continue
+                            </button>
+                            {(errors.general || (typeof errors === 'string' && errors)) && (
+                                <p className="text-red-500 text-xs mt-2 text-center">
+                                    {errors.general || (typeof errors === 'string' ? errors : '')}
+                                </p>
+                            )}
+                        </div>
                     </form>
 
                     <p className="text-center text-sm">

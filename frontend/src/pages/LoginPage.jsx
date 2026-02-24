@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
 import { Bot, Eye, EyeOff, Sun, Moon } from 'lucide-react';
-import { toast } from 'react-hot-toast';
 import { useTheme } from '../context/ThemeContext';
 import { parseApiError } from '../utils/api';
 
@@ -10,35 +9,38 @@ const LoginPage = () => {
     const [identifier, setIdentifier] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
-    const [fieldErrors, setFieldErrors] = useState({});
+    const [errors, setErrors] = useState({});
     const { login } = useAuth();
     const { theme, toggleTheme } = useTheme();
     const navigate = useNavigate();
 
-    const validateEmail = (email) => {
-        return email.includes('@') && email.includes('.');
+    const handleIdentifierChange = (e) => {
+        const val = e.target.value.toLowerCase();
+        setIdentifier(val);
+        setErrors(prev => ({ ...prev, identifier: '', username: '', email: '', general: '' }));
+    };
+
+    const handlePasswordChange = (e) => {
+        setPassword(e.target.value);
+        setErrors(prev => ({ ...prev, password: '', general: '' }));
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setFieldErrors({});
+        setErrors({});
+
+        let newErrors = {};
 
         if (!identifier.trim()) {
-            toast.error('Please enter your email or username');
+            newErrors.identifier = 'Please enter your email or username';
+        }
+
+        if (Object.keys(newErrors).length > 0) {
+            setErrors(newErrors);
             return;
         }
 
         const normalizedIdentifier = identifier.trim().toLowerCase();
-
-        if (normalizedIdentifier.includes('@') && !validateEmail(normalizedIdentifier)) {
-            toast.error('Please enter a valid email address');
-            return;
-        }
-
-        if (password.length < 8) {
-            toast.error('Password must be at least 8 characters long');
-            return;
-        }
 
         try {
             const success = await login(normalizedIdentifier, password);
@@ -46,11 +48,12 @@ const LoginPage = () => {
                 navigate('/chat');
             }
         } catch (err) {
-            const errorMsg = parseApiError(err);
-            toast.error(errorMsg);
-            if (err.response?.data && typeof err.response.data === 'object') {
-                setFieldErrors(err.response.data);
-            }
+            const data = err.response?.data || {};
+            setErrors({
+                identifier: data.identifier || data.username || data.email || '',
+                password: data.password || '',
+                general: data.general || data.detail || data.error || (typeof data === 'string' ? data : '') || (!err.response ? parseApiError(err) : '')
+            });
         }
     };
 
@@ -94,14 +97,12 @@ const LoginPage = () => {
                                 type="text"
                                 required
                                 value={identifier}
-                                onChange={(e) => setIdentifier(e.target.value.toLowerCase())}
-                                className={`w-full px-4 py-3 rounded-lg border bg-background text-foreground focus:border-[#10a37f] focus:ring-1 focus:ring-[#10a37f] outline-none transition-all ${fieldErrors.username || fieldErrors.email || fieldErrors.detail ? 'border-red-500' : 'border-border'}`}
+                                onChange={handleIdentifierChange}
+                                className={`w-full px-4 py-3 rounded-lg border bg-background text-foreground focus:border-[#10a37f] focus:ring-1 focus:ring-[#10a37f] outline-none transition-all ${errors.identifier ? 'border-red-500' : 'border-border'}`}
                                 placeholder="Email or username"
                             />
-                            {(fieldErrors.username || fieldErrors.email || fieldErrors.detail) && (
-                                <p className="text-red-500 text-xs mt-1">
-                                    {fieldErrors.username || fieldErrors.email || fieldErrors.detail}
-                                </p>
+                            {errors.identifier && (
+                                <p className="text-red-500 text-xs mt-1">Invalid email or username</p>
                             )}
                         </div>
                         <div>
@@ -111,8 +112,8 @@ const LoginPage = () => {
                                     type={showPassword ? "text" : "password"}
                                     required
                                     value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    className={`w-full px-4 py-3 rounded-lg border bg-background text-foreground focus:border-[#10a37f] focus:ring-1 focus:ring-[#10a37f] outline-none transition-all pr-12 ${fieldErrors.password ? 'border-red-500' : 'border-border'}`}
+                                    onChange={handlePasswordChange}
+                                    className={`w-full px-4 py-3 rounded-lg border bg-background text-foreground focus:border-[#10a37f] focus:ring-1 focus:ring-[#10a37f] outline-none transition-all pr-12 ${errors.password ? 'border-red-500' : 'border-border'}`}
                                     placeholder="Enter password"
                                 />
                                 <button
@@ -123,16 +124,21 @@ const LoginPage = () => {
                                     {showPassword ? <EyeOff size={20} /> : <Eye size={18} />}
                                 </button>
                             </div>
-                            {fieldErrors.password && (
-                                <p className="text-red-500 text-xs mt-1">{fieldErrors.password}</p>
+                            {errors.password && (
+                                <p className="text-red-500 text-xs mt-1">{errors.password}</p>
                             )}
                         </div>
-                        <button
-                            type="submit"
-                            className="w-full bg-[#10a37f] hover:bg-[#1a7f64] hover:cursor-pointer text-white font-semibold py-3 rounded-lg transition-colors mt-2"
-                        >
-                            Login
-                        </button>
+                        <div className="pt-2">
+                            <button
+                                type="submit"
+                                className="w-full bg-[#10a37f] hover:bg-[#1a7f64] hover:cursor-pointer text-white font-semibold py-3 rounded-lg transition-colors"
+                            >
+                                Login
+                            </button>
+                            {errors.general && (
+                                <p className="text-red-500 text-xs mt-2 text-center">{errors.general}</p>
+                            )}
+                        </div>
                     </form>
 
                     <p className="text-center text-sm">

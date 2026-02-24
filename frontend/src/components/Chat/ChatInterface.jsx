@@ -20,7 +20,7 @@ const ChatInterface = ({ isSidebarOpen = true, setIsSidebarOpen, isMobile }) => 
     const [showExhaustionBanner, setShowExhaustionBanner] = useState(false);
     const [isModelSelectorOpen, setIsModelSelectorOpen] = useState(false);
     const abortControllerRef = useRef(null);
-    
+
     const activeChat = getActiveChat();
     const messages = activeChat?.messages || [];
 
@@ -34,9 +34,9 @@ const ChatInterface = ({ isSidebarOpen = true, setIsSidebarOpen, isMobile }) => 
 
         if (!currentChatId) {
             try {
-                const newChat = await api.post('/api/conversations/', { 
+                const newChat = await api.post('/api/conversations/', {
                     title: content.slice(0, 30) || 'New Chat',
-                    model: selectedModel 
+                    model: selectedModel
                 });
                 newChat.messages = [];
                 newChat.name = newChat.title;
@@ -48,12 +48,12 @@ const ChatInterface = ({ isSidebarOpen = true, setIsSidebarOpen, isMobile }) => 
             }
         }
 
-        const userMsg = { 
-            id: 'temp-' + Date.now(), 
-            role: 'user', 
-            content, 
-            attachments: attachments || [], 
-            created_at: new Date().toISOString() 
+        const userMsg = {
+            id: 'temp-' + Date.now(),
+            role: 'user',
+            content,
+            attachments: attachments || [],
+            created_at: new Date().toISOString()
         };
         addMessage(currentChatId, userMsg);
 
@@ -172,13 +172,6 @@ const ChatInterface = ({ isSidebarOpen = true, setIsSidebarOpen, isMobile }) => 
         if (showExhaustionBanner) setShowExhaustionBanner(false);
     }, [selectedModel]);
 
-    const suggestions = [
-        { icon: <MessageSquare className="text-blue-500" size={18} />, text: "Write a short story about a time traveler" },
-        { icon: <Sparkles className="text-purple-500" size={18} />, text: "Explain quantum computing in simple terms" },
-        { icon: <Zap className="text-yellow-500" size={18} />, text: "Help me write a professional email for a job application" },
-        { icon: <Shield className="text-green-500" size={18} />, text: "What are some best practices for web security?" }
-    ];
-
     return (
         <ChatContainer>
             {/* Header */}
@@ -200,7 +193,7 @@ const ChatInterface = ({ isSidebarOpen = true, setIsSidebarOpen, isMobile }) => 
                         </span>
                     </div>
                 </div>
-                
+
                 <div className="flex items-center gap-2">
                     <motion.button
                         onClick={toggleTheme}
@@ -235,9 +228,9 @@ const ChatInterface = ({ isSidebarOpen = true, setIsSidebarOpen, isMobile }) => 
                         onClick={() => {
                             setIsModelSelectorOpen(true);
                             if (messagesContainerRef.current) {
-                                messagesContainerRef.current.scrollTo({ 
+                                messagesContainerRef.current.scrollTo({
                                     top: messagesContainerRef.current.scrollHeight,
-                                    behavior: 'smooth' 
+                                    behavior: 'smooth'
                                 });
                             }
                         }}
@@ -259,7 +252,7 @@ const ChatInterface = ({ isSidebarOpen = true, setIsSidebarOpen, isMobile }) => 
                     </div>
                 ) : messages.length === 0 ? (
                     <div className="h-full flex flex-col items-center justify-center p-6 text-center max-w-2xl mx-auto space-y-6 sm:space-y-8 animate-in fade-in zoom-in duration-500">
-                        <motion.div 
+                        <motion.div
                             initial={{ scale: 0.8, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-[#10a37f] flex items-center justify-center text-white shadow-lg"
@@ -267,26 +260,12 @@ const ChatInterface = ({ isSidebarOpen = true, setIsSidebarOpen, isMobile }) => 
                             <Bot size={messages.length === 0 && !isMobile ? 40 : 28} />
                         </motion.div>
                         <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">How can I help you today?</h2>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full">
-                            {suggestions.map((s, i) => (
-                                <button
-                                    key={i}
-                                    onClick={() => handleSendMessage(s.text)}
-                                    className="p-4 rounded-2xl border border-border hover:bg-(--hover-bg) transition-all text-left group cursor-pointer"
-                                >
-                                    <div className="flex items-center justify-between mb-1">
-                                        {s.icon}
-                                    </div>
-                                    <p className="text-sm text-sidebar-foreground/80 group-hover:text-foreground">{s.text}</p>
-                                </button>
-                            ))}
-                        </div>
                     </div>
                 ) : (
                     <div className="pt-4 max-w-4xl mx-auto w-full">
-                        <MessageList 
-                            messages={messages} 
-                            isSidebarOpen={isSidebarOpen} 
+                        <MessageList
+                            messages={messages}
+                            isSidebarOpen={isSidebarOpen}
                             isResponding={isResponding}
                             isMobile={isMobile}
                         />
@@ -296,8 +275,8 @@ const ChatInterface = ({ isSidebarOpen = true, setIsSidebarOpen, isMobile }) => 
 
             {/* Input */}
             <div className="shrink-0 bg-background/50 backdrop-blur-sm border-t border-transparent">
-                <ChatInput 
-                    onSend={handleSendMessage} 
+                <ChatInput
+                    onSend={handleSendMessage}
                     onStop={handleStop}
                     isResponding={isResponding}
                     selectedModel={selectedModel}

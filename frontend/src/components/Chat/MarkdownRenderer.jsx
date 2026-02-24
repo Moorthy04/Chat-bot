@@ -97,11 +97,11 @@ const MarkdownRenderer = ({ content, isStreaming = false }) => {
 
                     // Link styling
                     a: ({ node, ...props }) => (
-                        <a 
-                            className="text-(--button-primary) hover:underline transition-all font-medium decoration-2 underline-offset-4" 
-                            target="_blank" 
-                            rel="noopener noreferrer" 
-                            {...props} 
+                        <a
+                            className="text-(--button-primary) hover:underline transition-all font-medium decoration-2 underline-offset-4"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            {...props}
                         />
                     ),
                     // Table styling
@@ -119,9 +119,9 @@ const MarkdownRenderer = ({ content, isStreaming = false }) => {
                     li: ({ node, ...props }) => <li className="pl-1" {...props} />,
                     // Quote styling
                     blockquote: ({ node, ...props }) => (
-                        <blockquote 
-                            className="border-l-4 border-(--button-primary)/30 pl-4 py-1 my-6 italic text-foreground/70 bg-(--hover-bg)/30 rounded-r-lg" 
-                            {...props} 
+                        <blockquote
+                            className="border-l-4 border-(--button-primary)/30 pl-4 py-1 my-6 italic text-foreground/70 bg-(--hover-bg)/30 rounded-r-lg"
+                            {...props}
                         />
                     ),
                     // Divider

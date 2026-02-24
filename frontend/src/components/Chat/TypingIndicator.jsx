@@ -9,7 +9,7 @@ const TypingIndicator = () => {
                     <motion.div
                         key={i}
                         className="w-1.5 h-1.5 rounded-full bg-(--button-primary)"
-                        animate={{ 
+                        animate={{
                             opacity: [0.3, 1, 0.3],
                             scale: [0.9, 1.1, 0.9]
                         }}

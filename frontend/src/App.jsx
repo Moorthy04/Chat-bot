@@ -23,15 +23,6 @@ const AnimatedRoutes = () => {
   const location = useLocation();
 
   return (
-    <AnimatePresence mode="wait">
-      <motion.div
-        key={location.pathname}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.15 }}
-        className="w-full min-h-screen"
-      >
         <Suspense fallback={<div className="min-h-screen bg-background" />}>
           <Routes location={location}>
             <Route path="/" element={
@@ -68,8 +59,6 @@ const AnimatedRoutes = () => {
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </Suspense>
-      </motion.div>
-    </AnimatePresence>
   );
 };
 

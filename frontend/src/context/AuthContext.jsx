@@ -78,7 +78,7 @@ export const AuthProvider = ({ children }) => {
             localStorage.removeItem('access_token');
             localStorage.removeItem('refresh_token');
             clearStaleData();
-            toast.success('Logged out');
+            return true;
         }
     };
 
@@ -86,7 +86,6 @@ export const AuthProvider = ({ children }) => {
         try {
             const updatedUser = await api.patch('/api/auth/profile/', data);
             setUser(updatedUser);
-            toast.success('Profile updated');
             return true;
         } catch (err) {
             // Rethrow so component can handle field errors
@@ -97,7 +96,6 @@ export const AuthProvider = ({ children }) => {
     const changePassword = async (data) => {
         try {
             await api.post('/api/auth/change-password/', data);
-            toast.success('Password changed successfully');
             return true;
         } catch (err) {
             // Rethrow so component can handle field errors

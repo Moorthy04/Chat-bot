@@ -77,12 +77,26 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 ASGI_APPLICATION = 'backend.asgi.application'
 
 # Database
+# The below only for development. For production, switch to another database like PostgreSQL and use environment variables for credentials.
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+
+# The below one is an example of how to configure PostgreSQL for production. Uncomment and set env vars accordingly.
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': os.getenv('POSTGRES_DB', 'chatbot_db'),
+#         'USER': os.getenv('POSTGRES_USER', 'chatbot_user'),
+#         'PASSWORD': os.getenv('POSTGRES_PASSWORD', 'chatbot_password'),
+#         'HOST': os.getenv('POSTGRES_HOST', 'localhost'),
+#         'PORT': os.getenv('POSTGRES_PORT', '5432'),
+#     }
+# }
+
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
