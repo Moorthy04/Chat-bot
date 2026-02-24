@@ -1,11 +1,16 @@
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from rest_framework import generics, status, permissions
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken
-from .serializers import UserSerializer, RegisterSerializer, CustomTokenObtainPairSerializer
+from .serializers import (
+    UserSerializer, RegisterSerializer, CustomTokenObtainPairSerializer,
+    ProfileUpdateSerializer, ChangePasswordSerializer
+)
 from django.db.models import Q
 from django.conf import settings
+
+User = get_user_model()
 
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
@@ -29,9 +34,8 @@ class LoginView(TokenObtainPairView):
     def post(self, request, *args, **kwargs):
         response = super().post(request, *args, **kwargs)
         if response.status_code == 200:
-            # Identifier could be username or email
             identifier = request.data.get('username')
-            user = User.objects.filter(Q(username=identifier) | Q(email=identifier)).first()
+            user = User.objects.filter(Q(email=identifier) | Q(username=identifier)).first()
             if user:
                 response.data['user'] = UserSerializer(user).data
         return response
@@ -45,11 +49,39 @@ class MeView(generics.RetrieveAPIView):
 
     def get(self, request, *args, **kwargs):
         if getattr(settings, 'AUTH_DISABLED', False):
-            # If auth is disabled, return a mock user if not authenticated
             if not request.user.is_authenticated:
                 user, _ = User.objects.get_or_create(username='testuser', email='test@example.com')
                 return Response(UserSerializer(user).data)
         return super().get(request, *args, **kwargs)
+
+class ProfileUpdateView(generics.UpdateAPIView):
+    serializer_class = ProfileUpdateSerializer
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get_object(self):
+        return self.request.user
+
+    def patch(self, request, *args, **kwargs):
+        return self.partial_update(request, *args, **kwargs)
+
+class ChangePasswordView(generics.GenericAPIView):
+    serializer_class = ChangePasswordSerializer
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = request.user
+
+        if not user.check_password(serializer.validated_data['old_password']):
+            return Response({"old_password": ["Your current password is incorrect."]}, status=status.HTTP_400_BAD_REQUEST)
+
+        if serializer.validated_data['old_password'] == serializer.validated_data['new_password']:
+            return Response({"new_password": ["New password must be different from your current password."]}, status=status.HTTP_400_BAD_REQUEST)
+
+        user.set_password(serializer.validated_data['new_password'])
+        user.save()
+        return Response({"message": "Password updated successfully"}, status=status.HTTP_200_OK)
 
 class LogoutView(generics.GenericAPIView):
     permission_classes = (permissions.IsAuthenticated,)

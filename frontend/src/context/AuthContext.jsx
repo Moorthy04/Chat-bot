@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { api } from '../utils/api';
+import { api, parseApiError } from '../utils/api';
 import { toast } from 'react-hot-toast';
 
 const AuthContext = createContext();
@@ -24,8 +24,7 @@ export const AuthProvider = ({ children }) => {
                 const userData = await api.get('/api/auth/me/');
                 setUser(userData);
             } catch (err) {
-                // Session check failed
-                if (err.message.includes('Unauthorized') || err.message.includes('Refresh failed')) {
+                if (err.response?.status === 401 || err.message === 'Unauthorized' || err.message === 'Refresh failed') {
                     localStorage.removeItem('access_token');
                     localStorage.removeItem('refresh_token');
                     clearStaleData();
@@ -47,19 +46,24 @@ export const AuthProvider = ({ children }) => {
             toast.success('Welcome back!');
             return true;
         } catch (err) {
-            toast.error(err.message || 'Login failed');
-            return false;
+            // Rethrow so component can handle field errors
+            throw err;
         }
     };
 
     const register = async (username, email, password) => {
         try {
-            await api.post('/api/auth/register/', { username, email, password });
+            await api.post('/api/auth/register/', {
+                username,
+                email,
+                password,
+                confirm_password: password // Backend expects confirm_password
+            });
             toast.success('Account created! Please log in.');
             return true;
         } catch (err) {
-            toast.error(err.message || 'Registration failed');
-            return false;
+            // Rethrow so component can handle field errors
+            throw err;
         }
     };
 
@@ -78,8 +82,31 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    const updateUser = async (data) => {
+        try {
+            const updatedUser = await api.patch('/api/auth/profile/', data);
+            setUser(updatedUser);
+            toast.success('Profile updated');
+            return true;
+        } catch (err) {
+            // Rethrow so component can handle field errors
+            throw err;
+        }
+    };
+
+    const changePassword = async (data) => {
+        try {
+            await api.post('/api/auth/change-password/', data);
+            toast.success('Password changed successfully');
+            return true;
+        } catch (err) {
+            // Rethrow so component can handle field errors
+            throw err;
+        }
+    };
+
     return (
-        <AuthContext.Provider value={{ user, login, register, logout, loading }}>
+        <AuthContext.Provider value={{ user, login, register, logout, loading, updateUser, changePassword }}>
             {children}
         </AuthContext.Provider>
     );

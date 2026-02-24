@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Bot, Eye, EyeOff, Sun, Moon } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useTheme } from '../context/ThemeContext';
+import { parseApiError } from '../utils/api';
 
 const SignupPage = () => {
     const [username, setUsername] = useState('');
@@ -12,6 +13,7 @@ const SignupPage = () => {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [fieldErrors, setFieldErrors] = useState({});
     const { register } = useAuth();
     const { theme, toggleTheme } = useTheme();
     const navigate = useNavigate();
@@ -22,7 +24,8 @@ const SignupPage = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
+        setFieldErrors({});
+
         if (!username.trim()) {
             toast.error('Please enter a username');
             return;
@@ -43,10 +46,23 @@ const SignupPage = () => {
             return;
         }
 
-        const success = await register(username, email, password);
-        if (success) {
-            navigate('/login');
+        try {
+            const success = await register(username.toLowerCase(), email, password);
+            if (success) {
+                navigate('/login');
+            }
+        } catch (err) {
+            const errorMsg = parseApiError(err);
+            toast.error(errorMsg);
+            if (err.response?.data && typeof err.response.data === 'object') {
+                setFieldErrors(err.response.data);
+            }
         }
+    };
+
+    const handleUsernameChange = (e) => {
+        const val = e.target.value;
+        setUsername(val.toLowerCase());
     };
 
     return (
@@ -89,10 +105,13 @@ const SignupPage = () => {
                                 type="text"
                                 required
                                 value={username}
-                                onChange={(e) => setUsername(e.target.value)}
-                                className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground focus:border-[#10a37f] focus:ring-1 focus:ring-[#10a37f] outline-none transition-all"
+                                onChange={handleUsernameChange}
+                                className={`w-full px-4 py-3 rounded-lg border bg-background text-foreground focus:border-[#10a37f] focus:ring-1 focus:ring-[#10a37f] outline-none transition-all ${fieldErrors.username ? 'border-red-500' : 'border-border'}`}
                                 placeholder="Username"
                             />
+                            {fieldErrors.username && (
+                                <p className="text-red-500 text-xs mt-1">{fieldErrors.username}</p>
+                            )}
                         </div>
                         <div>
                             <label className="block text-sm font-medium mb-1">Email address</label>
@@ -101,9 +120,12 @@ const SignupPage = () => {
                                 required
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground focus:border-[#10a37f] focus:ring-1 focus:ring-[#10a37f] outline-none transition-all"
+                                className={`w-full px-4 py-3 rounded-lg border bg-background text-foreground focus:border-[#10a37f] focus:ring-1 focus:ring-[#10a37f] outline-none transition-all ${fieldErrors.email ? 'border-red-500' : 'border-border'}`}
                                 placeholder="name@example.com"
                             />
+                            {fieldErrors.email && (
+                                <p className="text-red-500 text-xs mt-1">{fieldErrors.email}</p>
+                            )}
                         </div>
                         <div>
                             <label className="block text-sm font-medium mb-1">Password</label>
@@ -113,7 +135,7 @@ const SignupPage = () => {
                                     required
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground focus:border-[#10a37f] focus:ring-1 focus:ring-[#10a37f] outline-none transition-all pr-12"
+                                    className={`w-full px-4 py-3 rounded-lg border bg-background text-foreground focus:border-[#10a37f] focus:ring-1 focus:ring-[#10a37f] outline-none transition-all pr-12 ${fieldErrors.password ? 'border-red-500' : 'border-border'}`}
                                     placeholder="Create password"
                                 />
                                 <button
@@ -124,6 +146,9 @@ const SignupPage = () => {
                                     {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                                 </button>
                             </div>
+                            {fieldErrors.password && (
+                                <p className="text-red-500 text-xs mt-1">{fieldErrors.password}</p>
+                            )}
                         </div>
                         <div>
                             <label className="block text-sm font-medium mb-1">Confirm Password</label>
@@ -133,7 +158,7 @@ const SignupPage = () => {
                                     required
                                     value={confirmPassword}
                                     onChange={(e) => setConfirmPassword(e.target.value)}
-                                    className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground focus:border-[#10a37f] focus:ring-1 focus:ring-[#10a37f] outline-none transition-all pr-12"
+                                    className={`w-full px-4 py-3 rounded-lg border bg-background text-foreground focus:border-[#10a37f] focus:ring-1 focus:ring-[#10a37f] outline-none transition-all pr-12 ${fieldErrors.confirm_password ? 'border-red-500' : 'border-border'}`}
                                     placeholder="Confirm password"
                                 />
                                 <button
@@ -144,6 +169,9 @@ const SignupPage = () => {
                                     {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                                 </button>
                             </div>
+                            {fieldErrors.confirm_password && (
+                                <p className="text-red-500 text-xs mt-1">{fieldErrors.confirm_password}</p>
+                            )}
                         </div>
                         <button
                             type="submit"

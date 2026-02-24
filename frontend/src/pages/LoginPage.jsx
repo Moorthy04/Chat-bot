@@ -4,11 +4,13 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Bot, Eye, EyeOff, Sun, Moon } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useTheme } from '../context/ThemeContext';
+import { parseApiError } from '../utils/api';
 
 const LoginPage = () => {
     const [identifier, setIdentifier] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
+    const [fieldErrors, setFieldErrors] = useState({});
     const { login } = useAuth();
     const { theme, toggleTheme } = useTheme();
     const navigate = useNavigate();
@@ -19,13 +21,16 @@ const LoginPage = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setFieldErrors({});
 
         if (!identifier.trim()) {
             toast.error('Please enter your email or username');
             return;
         }
 
-        if (identifier.includes('@') && !validateEmail(identifier)) {
+        const normalizedIdentifier = identifier.trim().toLowerCase();
+
+        if (normalizedIdentifier.includes('@') && !validateEmail(normalizedIdentifier)) {
             toast.error('Please enter a valid email address');
             return;
         }
@@ -35,9 +40,17 @@ const LoginPage = () => {
             return;
         }
 
-        const success = await login(identifier, password);
-        if (success) {
-            navigate('/chat');
+        try {
+            const success = await login(normalizedIdentifier, password);
+            if (success) {
+                navigate('/chat');
+            }
+        } catch (err) {
+            const errorMsg = parseApiError(err);
+            toast.error(errorMsg);
+            if (err.response?.data && typeof err.response.data === 'object') {
+                setFieldErrors(err.response.data);
+            }
         }
     };
 
@@ -81,10 +94,15 @@ const LoginPage = () => {
                                 type="text"
                                 required
                                 value={identifier}
-                                onChange={(e) => setIdentifier(e.target.value)}
-                                className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground focus:border-[#10a37f] focus:ring-1 focus:ring-[#10a37f] outline-none transition-all"
+                                onChange={(e) => setIdentifier(e.target.value.toLowerCase())}
+                                className={`w-full px-4 py-3 rounded-lg border bg-background text-foreground focus:border-[#10a37f] focus:ring-1 focus:ring-[#10a37f] outline-none transition-all ${fieldErrors.username || fieldErrors.email || fieldErrors.detail ? 'border-red-500' : 'border-border'}`}
                                 placeholder="Email or username"
                             />
+                            {(fieldErrors.username || fieldErrors.email || fieldErrors.detail) && (
+                                <p className="text-red-500 text-xs mt-1">
+                                    {fieldErrors.username || fieldErrors.email || fieldErrors.detail}
+                                </p>
+                            )}
                         </div>
                         <div>
                             <label className="block text-sm font-medium mb-1">Password</label>
@@ -94,7 +112,7 @@ const LoginPage = () => {
                                     required
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground focus:border-[#10a37f] focus:ring-1 focus:ring-[#10a37f] outline-none transition-all pr-12"
+                                    className={`w-full px-4 py-3 rounded-lg border bg-background text-foreground focus:border-[#10a37f] focus:ring-1 focus:ring-[#10a37f] outline-none transition-all pr-12 ${fieldErrors.password ? 'border-red-500' : 'border-border'}`}
                                     placeholder="Enter password"
                                 />
                                 <button
@@ -102,9 +120,12 @@ const LoginPage = () => {
                                     onClick={() => setShowPassword(!showPassword)}
                                     className="absolute right-4 top-1/2 -translate-y-1/2 text-sidebar-foreground/40 hover:text-foreground hover:cursor-pointer transition-colors"
                                 >
-                                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                    {showPassword ? <EyeOff size={20} /> : <Eye size={18} />}
                                 </button>
                             </div>
+                            {fieldErrors.password && (
+                                <p className="text-red-500 text-xs mt-1">{fieldErrors.password}</p>
+                            )}
                         </div>
                         <button
                             type="submit"

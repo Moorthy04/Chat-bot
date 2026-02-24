@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     MessageSquare,
@@ -11,7 +11,8 @@ import {
     SquarePen,
     Trash2,
     Edit3,
-    X
+    X,
+    User as UserIcon
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -30,10 +31,13 @@ const Sidebar = ({ isOpen, setIsOpen, isMobile }) => {
     const [showRenameModal, setShowRenameModal] = useState(false);
     const [selectedChatId, setSelectedChatId] = useState(null);
     const [renameValue, setRenameValue] = useState('');
+    const [showUserMenu, setShowUserMenu] = useState(false);
+    const userMenuRef = useRef(null);
 
     const handleLogout = () => {
         logout();
         setShowLogoutConfirm(false);
+        setShowUserMenu(false);
     };
 
     const handleRename = (chatId) => {
@@ -73,22 +77,32 @@ const Sidebar = ({ isOpen, setIsOpen, isMobile }) => {
                 const target = event.target;
                 const isMenuButton = target.closest('button[data-menu-trigger]');
                 const isMenuItem = target.closest('[data-action-menu]');
-                
+
                 if (!isMenuButton && !isMenuItem) {
                     setActiveMenu(null);
                 }
+            }
+
+            if (showUserMenu && userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+                setShowUserMenu(false);
             }
         };
 
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, [activeMenu]);
+    }, [activeMenu, showUserMenu]);
+
+    const getDisplayName = () => {
+        if (!user) return 'Guest';
+        if (user.name) return user.name;
+        return user.username.charAt(0).toUpperCase() + user.username.slice(1);
+    };
 
     return (
         <>
             <motion.aside
                 initial={false}
-                animate={{ 
+                animate={{
                     width: isMobile ? '280px' : (isOpen ? '260px' : '0px'),
                     x: isMobile ? (isOpen ? 0 : -280) : 0,
                     opacity: isMobile && !isOpen ? 0 : 1
@@ -103,7 +117,7 @@ const Sidebar = ({ isOpen, setIsOpen, isMobile }) => {
                     {/* Fixed Header */}
                     <div className="p-3 space-y-2 shrink-0">
                         <div className="flex items-center gap-2">
-                            <button 
+                            <button
                                 onClick={() => {
                                     createNewChat();
                                     setSearchQuery('');
@@ -142,13 +156,13 @@ const Sidebar = ({ isOpen, setIsOpen, isMobile }) => {
                         <div className="text-xs font-semibold text-foreground/50 px-3 py-2 sticky top-0 bg-[var(--sidebar-bg)] z-10">Recent</div>
                         {chats.filter(chat => chat.name.toLowerCase().includes(searchQuery.toLowerCase())).map((chat) => (
                             <div key={chat.id} className={cn("relative group/item", activeMenu === chat.id ? "z-50" : "z-10")}>
-                                <div 
+                                <div
                                     className={cn(
                                         "w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-(--hover-bg) transition-colors cursor-pointer relative",
                                         activeChatId === chat.id && "bg-(--active-bg)"
                                     )}
                                 >
-                                    <button 
+                                    <button
                                         onClick={() => {
                                             navigate(`/chat/${chat.id}`);
                                             if (isMobile) setIsOpen(false);
@@ -158,7 +172,7 @@ const Sidebar = ({ isOpen, setIsOpen, isMobile }) => {
                                         <MessageSquare size={16} className="shrink-0" />
                                         <span className="text-sm truncate">{chat.name}</span>
                                     </button>
-                                    
+
                                     <button
                                         data-menu-trigger
                                         onClick={(e) => {
@@ -173,7 +187,7 @@ const Sidebar = ({ isOpen, setIsOpen, isMobile }) => {
                                         < MoreHorizontal size={16} />
                                     </button>
                                 </div>
-                                
+
                                 {/* Action Menu */}
                                 <AnimatePresence>
                                     {activeMenu === chat.id && (
@@ -206,21 +220,54 @@ const Sidebar = ({ isOpen, setIsOpen, isMobile }) => {
                     </div>
 
                     {/* Fixed Footer */}
-                    <div className="shrink-0 p-3 border-t border-(--border) bg-[var(--sidebar-bg)]">
-                        <div className="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors cursor-pointer group/user">
+                    <div className="shrink-0 p-3 border-t border-(--border) bg-[var(--sidebar-bg)] relative">
+                        <div
+                            className="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors cursor-pointer group/user hover:bg-(--hover-bg)"
+                            onClick={() => setShowUserMenu(!showUserMenu)}
+                        >
                             <div className="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center text-white text-xs font-bold ring-1 ring-white/10">
-                                {user?.username ? user.username.charAt(0).toUpperCase() : '?'}
+                                {getDisplayName() ? getDisplayName().charAt(0).toUpperCase() : '?'}
                             </div>
                             <span className="text-sm font-medium truncate flex-1 text-foreground">
-                                {user?.username ? (user.username.charAt(0).toUpperCase() + user.username.slice(1)) : 'Guest'}
+                                {getDisplayName()}
                             </span>
                             <button
-                                onClick={() => setShowLogoutConfirm(true)}
-                                className="p-2 rounded-full hover:bg-(--hover-bg) transition-colors cursor-pointer text-foreground/60 hover:text-foreground"
+                                className="p-1 rounded-full text-foreground/40 group-hover/user:text-foreground transition-colors cursor-pointer"
                             >
-                                <LogOut size={16}/>
+                                <MoreHorizontal size={16} />
                             </button>
                         </div>
+
+                        {/* User Setting Dropdown */}
+                        <AnimatePresence>
+                            {showUserMenu && (
+                                <motion.div
+                                    ref={userMenuRef}
+                                    initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                                    exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                                    className="absolute bottom-16 left-3 right-3 bg-(--modal-bg) border border-(--border) rounded-xl shadow-2xl z-[100] overflow-hidden py-1"
+                                >
+                                    <button
+                                        onClick={() => {
+                                            navigate('/profile');
+                                            setShowUserMenu(false);
+                                        }}
+                                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-(--hover-bg) transition-colors text-sm cursor-pointer"
+                                    >
+                                        <UserIcon size={16} />
+                                        <span>Edit Profile</span>
+                                    </button>
+                                    <button
+                                        onClick={() => setShowLogoutConfirm(true)}
+                                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-500/10 text-red-500 transition-colors text-sm cursor-pointer border-t border-(--border)"
+                                    >
+                                        <LogOut size={16} />
+                                        <span>Logout</span>
+                                    </button>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                     </div>
                 </div>
             </motion.aside>
@@ -236,7 +283,7 @@ const Sidebar = ({ isOpen, setIsOpen, isMobile }) => {
                         className={cn(
                             "w-6 h-6 rounded-full bg-(--background) border border-(--border) shadow-md flex items-center justify-center cursor-pointer pointer-events-auto transition-all duration-200",
                             "opacity-0 group-hover:opacity-100 hover:scale-105 active:scale-95",
-                            
+
                         )}
                         aria-label={isOpen ? "Collapse sidebar" : "Expand sidebar"}
                     >
@@ -248,7 +295,7 @@ const Sidebar = ({ isOpen, setIsOpen, isMobile }) => {
             {/* Modals Container */}
             <AnimatePresence>
                 {(showRenameModal || showDeleteConfirm || showLogoutConfirm) && (
-                    <div className="fixed inset-0 z-9999 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+                    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
                         {showRenameModal && (
                             <motion.div
                                 initial={{ opacity: 0, scale: 0.95 }}

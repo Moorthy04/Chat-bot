@@ -11,6 +11,31 @@ function onTokenRefresh(token) {
     refreshSubscribers.map(cb => cb(token));
 }
 
+export const parseApiError = (error) => {
+    if (!error.response) return error.message || 'Something went wrong';
+
+    const data = error.response.data;
+
+    if (data.detail) return data.detail;
+    if (data.error) return data.error;
+
+    // Handle field-level errors
+    if (typeof data === 'object' && !Array.isArray(data)) {
+        const messages = [];
+        for (const [field, errors] of Object.entries(data)) {
+            const fieldName = field === 'non_field_errors' ? '' : `${field}: `;
+            if (Array.isArray(errors)) {
+                messages.push(`${fieldName}${errors.join(', ')}`);
+            } else {
+                messages.push(`${fieldName}${errors}`);
+            }
+        }
+        return messages.join('\n');
+    }
+
+    return 'An unexpected error occurred';
+};
+
 export const api = {
     async request(endpoint, options = {}) {
         const token = localStorage.getItem('access_token');
@@ -32,7 +57,7 @@ export const api = {
 
             if (!refreshToken) {
                 this.logout();
-                throw new Error('Unauthorized');
+                throw { message: 'Unauthorized', response };
             }
 
             if (!isRefreshing) {
@@ -52,7 +77,7 @@ export const api = {
                         refreshSubscribers = [];
                     } else {
                         this.logout();
-                        throw new Error('Refresh failed');
+                        throw { message: 'Refresh failed', response: refreshRes };
                     }
                 } catch (err) {
                     this.logout();
@@ -75,8 +100,9 @@ export const api = {
         }
 
         if (!response.ok) {
-            const error = await response.json().catch(() => ({}));
-            throw new Error(error.detail || error.message);
+            const errorData = await response.json().catch(() => ({}));
+            // Throw an object that mimicks axios error for easier transition if needed or just for consistency
+            throw { response: { data: errorData, status: response.status }, message: errorData.detail || errorData.message || 'API Error' };
         }
 
         return response;
