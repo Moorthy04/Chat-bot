@@ -35,7 +35,7 @@
   --sidebar-bg: #171717;
   --sidebar-foreground: #ececec;
   --sidebar-border: #303030;
-  --border: #303030;
+  --border: hsl(0, 0%, 22%);
   --input-bg: #2f2f2f;
   --input-border: #424242;
   --modal-bg: #2f2f2f;

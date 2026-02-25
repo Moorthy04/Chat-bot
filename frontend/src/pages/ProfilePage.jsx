@@ -191,7 +191,7 @@ const ProfilePage = () => {
                 </div>
             </header>
 
-            <div className="w-full max-w-lg p-4 sm:p-8">
+            <div className="w-full max-w-[600px] p-4 sm:p-8">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
