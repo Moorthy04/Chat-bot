@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useState, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { api } from "../utils/api";
+import { api, BASE_URL } from "../utils/api";
 import { useAuth } from "./AuthContext";
 
 const ChatContext = createContext();
@@ -9,16 +9,21 @@ export const ChatProvider = ({ children }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  
+
   // Parse chat ID from URL
-  const activeChatId = location.pathname.startsWith('/chat/') 
-    ? location.pathname.split('/')[2] 
+  const activeChatId = location.pathname.startsWith('/chat/')
+    ? location.pathname.split('/')[2]
     : null;
-  
+
 
   const [chats, setChats] = useState([]);
   const [loading, setLoading] = useState(true);
   const [chatLoading, setChatLoading] = useState(false);
+
+  // Fix 1: Track generating states and abort controllers globally
+  const [generatingChatIds, setGeneratingChatIds] = useState(new Set());
+  const abortControllers = useRef({});
+  const [showExhaustionBanner, setShowExhaustionBanner] = useState(false);
 
   // ----------------------------
   // Fetch chat list on auth
@@ -141,6 +146,139 @@ export const ChatProvider = ({ children }) => {
     );
   };
 
+  // ----------------------------
+  // Streaming Logic (Fix 1)
+  // ----------------------------
+  const sendMessage = async (content, attachments, selectedModel) => {
+    let currentChatId = activeChatId;
+
+    // Stop existing stream if any for this specific chat (though UI usually prevents this)
+    if (abortControllers.current[currentChatId]) {
+      abortControllers.current[currentChatId].abort();
+    }
+
+    const controller = new AbortController();
+
+    // Create new chat if none active
+    if (!currentChatId) {
+      try {
+        const newChat = await api.post('/api/conversations/', {
+          title: content.slice(0, 30) || 'New Chat',
+          model: selectedModel
+        });
+        newChat.messages = [];
+        newChat.name = newChat.title;
+        setChats(prev => [newChat, ...prev]);
+        navigate(`/chat/${newChat.id}`);
+        currentChatId = newChat.id;
+      } catch (err) {
+        return;
+      }
+    }
+
+    abortControllers.current[currentChatId] = controller;
+    setGeneratingChatIds(prev => new Set(prev).add(currentChatId));
+
+    const userMsg = {
+      id: 'temp-' + Date.now(),
+      role: 'user',
+      content,
+      attachments: attachments || [],
+      created_at: new Date().toISOString()
+    };
+    addMessage(currentChatId, userMsg);
+
+    addMessage(currentChatId, {
+      id: 'ai-' + Date.now(),
+      role: 'assistant',
+      content: '',
+      created_at: new Date().toISOString()
+    });
+
+    try {
+      const token = localStorage.getItem('access_token');
+      const response = await fetch(`${BASE_URL}/api/chat/stream/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          conversation_id: currentChatId,
+          user_message: content,
+          attachment_ids: (attachments || []).map(a => a.id),
+          model: selectedModel
+        }),
+        signal: controller.signal
+      });
+
+      if (!response.ok) throw new Error('Streaming failed');
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let assistantContent = '';
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const frames = buffer.split('\n\n');
+        buffer = frames.pop() ?? '';
+
+        for (const frame of frames) {
+          for (const line of frame.split('\n')) {
+            if (!line.startsWith('data:')) continue;
+            const raw = line.slice(5).trimStart();
+            if (raw === '[DONE]') continue;
+            try {
+              assistantContent += JSON.parse(raw);
+            } catch {
+              assistantContent += raw;
+            }
+          }
+        }
+        updateLastMessage(currentChatId, assistantContent);
+      }
+
+      if (buffer.trim()) {
+        for (const line of buffer.split('\n')) {
+          if (line.startsWith('data:')) {
+            const data = line.slice(5).trimStart();
+            if (data !== '[DONE]') assistantContent += data;
+          }
+        }
+        if (assistantContent) updateLastMessage(currentChatId, assistantContent);
+      }
+
+      if (assistantContent.includes('switching to other models')) {
+        setShowExhaustionBanner(true);
+      }
+
+    } catch (err) {
+      if (err.name === 'AbortError') {
+        console.log('Stream aborted for chat:', currentChatId);
+      } else {
+        updateLastMessage(currentChatId, 'Sorry, something went wrong with the connection.');
+      }
+    } finally {
+      setGeneratingChatIds(prev => {
+        const next = new Set(prev);
+        next.delete(currentChatId);
+        return next;
+      });
+      delete abortControllers.current[currentChatId];
+    }
+  };
+
+  const stopGeneration = (chatId) => {
+    const idToStop = chatId || activeChatId;
+    if (abortControllers.current[idToStop]) {
+      abortControllers.current[idToStop].abort();
+    }
+  };
+
   const getActiveChat = () => {
     if (!activeChatId) return null;
     return chats.find(chat => chat.id === activeChatId) || null;
@@ -153,11 +291,16 @@ export const ChatProvider = ({ children }) => {
         activeChatId,
         loading,
         chatLoading,
+        generatingChatIds,
+        showExhaustionBanner,
+        setShowExhaustionBanner,
         createNewChat,
         renameChat,
         deleteChat,
         addMessage,
         updateLastMessage,
+        sendMessage,
+        stopGeneration,
         getActiveChat,
         setChats,
       }}

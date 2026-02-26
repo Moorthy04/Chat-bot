@@ -18,7 +18,6 @@ GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', '')
 GEMINI_API_KEY_2 = os.getenv('GEMINI_API_KEY_2', '')
 GEMINI_API_KEY_3 = os.getenv('GEMINI_API_KEY_3', '')
 # For model selection feature:
-OPENAI_API_KEY = os.getenv('OPENAI_API_KEY', '')
 CLAUDE_API_KEY = os.getenv('CLAUDE_API_KEY', '')
 
 # DEV MODE AUTH

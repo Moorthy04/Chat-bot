@@ -7,7 +7,6 @@ class AIEngine:
         self.gemini_model_name = 'gemini-2.5-flash'
         self.model_key_map = {
             'gemini': getattr(settings, 'GEMINI_API_KEY', ''),
-            'gpt': getattr(settings, 'OPENAI_API_KEY', ''),
             'claude': getattr(settings, 'CLAUDE_API_KEY', '')
         }
 
@@ -35,7 +34,7 @@ class AIEngine:
         except Exception as e:
             error_str = str(e).upper()
             if "429" in error_str or "RESOURCE_EXHAUSTED" in error_str:
-                model_name = model.upper() if model != 'gpt' else 'GPT'
+                model_name = model.upper()
                 yield f"\n\n⚠️ {model_name} is currently unavailable. Try switching to other models! 🙏\n"
             else:
                 yield f"\n\n**[Error]** {str(e)}\n"

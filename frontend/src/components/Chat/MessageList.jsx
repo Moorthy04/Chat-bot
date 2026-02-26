@@ -1,10 +1,11 @@
-import { Bot, Paperclip, Copy, Check } from 'lucide-react';
+import { Bot, Paperclip, Copy, Check, ExternalLink } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import MarkdownRenderer from './MarkdownRenderer';
 import { cn } from '../../utils/cn';
 import TypingIndicator from './TypingIndicator';
+import { BASE_URL } from '../../utils/api';
 
 const CopyButton = ({ text }) => {
     const [copied, setCopied] = useState(false);
@@ -26,21 +27,30 @@ const CopyButton = ({ text }) => {
     );
 };
 
-const AttachmentCard = ({ file }) => (
-    <div className="flex items-center gap-2.5 px-3 py-2 rounded-xl border border-(--border) bg-(--hover-bg) shadow-sm w-48">
-        <div className="w-8 h-8 rounded-lg bg-(--background) border border-(--border) flex items-center justify-center shrink-0">
-            <Paperclip size={14} className="text-(--button-primary)" />
+const AttachmentCard = ({ file }) => {
+    // Fix 4: Make attachments clickable and opening in new tab
+    const fileUrl = file.file?.startsWith('http') ? file.file : `${BASE_URL}${file.file}`;
+
+    return (
+        <div
+            onClick={() => window.open(fileUrl, '_blank')}
+            className="flex items-center gap-2.5 px-3 py-2 rounded-xl border border-(--border) bg-(--hover-bg) shadow-sm w-48 cursor-pointer hover:bg-(--active-bg) transition-all group/att"
+        >
+            <div className="w-8 h-8 rounded-lg bg-(--background) border border-(--border) flex items-center justify-center shrink-0 group-hover/att:border-(--button-primary)/30 transition-colors">
+                <Paperclip size={14} className="text-(--button-primary)" />
+            </div>
+            <div className="flex flex-col min-w-0 flex-1">
+                <span className="font-semibold text-xs text-(--foreground) truncate">{file.name}</span>
+                {file.file_type && (
+                    <span className="text-[10px] text-(--foreground)/40 font-medium uppercase tracking-tight">
+                        {file.file_type.split('/')[1] || 'FILE'}
+                    </span>
+                )}
+            </div>
+            <ExternalLink size={12} className="text-(--foreground)/20 opacity-0 group-hover/att:opacity-100 transition-opacity shrink-0" />
         </div>
-        <div className="flex flex-col min-w-0">
-            <span className="font-semibold text-xs text-(--foreground) truncate max-w-[120px]">{file.name}</span>
-            {file.file_type && (
-                <span className="text-[10px] text-(--foreground)/40 font-medium uppercase tracking-tight">
-                    {file.file_type.split('/')[1] || 'FILE'}
-                </span>
-            )}
-        </div>
-    </div>
-);
+    );
+};
 
 const MessageList = ({ messages, isSidebarOpen = true, isResponding, isMobile }) => {
     const messagesEndRef = useRef(null);
