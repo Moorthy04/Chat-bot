@@ -64,7 +64,7 @@ const LoginPage = () => {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between items-center h-16">
                         <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-                            <Bot size={28} className="text-[#10a37f]" />
+                            <Bot size={28} className="text-(--button-primary)" />
                             <span className="text-xl font-bold">ChatBot</span>
                         </Link>
                         <div className="flex items-center gap-4">
@@ -131,7 +131,7 @@ const LoginPage = () => {
                         <div className="pt-2">
                             <button
                                 type="submit"
-                                className="w-full bg-[#10a37f] hover:bg-[#1a7f64] hover:cursor-pointer text-white font-semibold py-3 rounded-lg transition-colors"
+                                className="w-full bg-(--button-primary) hover:bg-(--button-primary-hover) hover:cursor-pointer text-white font-semibold py-3 rounded-lg transition-colors"
                             >
                                 Login
                             </button>
@@ -143,7 +143,7 @@ const LoginPage = () => {
 
                     <p className="text-center text-sm">
                         Don't have an account?{' '}
-                        <Link to="/signup" className="text-[#10a37f] hover:underline">
+                        <Link to="/signup" className="text-(--button-primary) hover:underline">
                             Create Account
                         </Link>
                     </p>

@@ -14,7 +14,7 @@ const LandingPage = () => {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between items-center h-16">
                         <div className="flex items-center gap-2">
-                            <Bot size={28} className="text-[#10a37f]" />
+                            <Bot size={28} className="text-(--button-primary)" />
                             <span className="text-xl font-bold">ChatBot</span>
                         </div>
                         <div className="flex items-center gap-4">
@@ -33,7 +33,7 @@ const LandingPage = () => {
                             </Link>
                             <Link
                                 to="/signup"
-                                className="px-4 py-2 text-sm font-medium bg-[#10a37f] hover:bg-[#1a7f64] text-white rounded-lg transition-colors"
+                                className="px-4 py-2 text-sm font-medium bg-(--button-primary) hover:bg-(--button-primary-hover) text-white rounded-lg transition-colors"
                             >
                                 Sign up
                             </Link>
@@ -44,7 +44,7 @@ const LandingPage = () => {
 
             {/* Hero Section */}
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 text-center">
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#10a37f]/10 text-[#10a37f] text-sm font-medium mb-8">
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-(--button-primary)/10 text-(--button-primary) text-sm font-medium mb-8">
                     <Sparkles size={16} />
                     <span>Powered by Advanced AI</span>
                 </div>
@@ -56,7 +56,7 @@ const LandingPage = () => {
                 <div className="flex flex-col sm:flex-row gap-4 justify-center mb-14">
                     <button
                         onClick={() => navigate('/login')}
-                        className="px-8 py-4 bg-[#10a37f] hover:bg-[#1a7f64] text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                        className="px-8 py-4 bg-(--button-primary) hover:bg-(--button-primary-hover) text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2 cursor-pointer"
                     >
                         Start chatting
                         <ArrowRight size={20} />
@@ -73,9 +73,9 @@ const LandingPage = () => {
             {/* Features */}
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-12">
                 <div className="grid md:grid-cols-3 gap-8">
-                    <div className="p-6 rounded-2xl border border-border hover:border-[#10a37f] transition-all">
-                        <div className="w-12 h-12 rounded-xl bg-[#10a37f]/10 flex items-center justify-center mb-4">
-                            <Zap size={24} className="text-[#10a37f]" />
+                    <div className="p-6 rounded-2xl border border-border hover:border-(--button-primary) transition-all">
+                        <div className="w-12 h-12 rounded-xl bg-(--button-primary)/10 flex items-center justify-center mb-4">
+                            <Zap size={24} className="text-(--button-primary)" />
                         </div>
                         <h3 className="text-xl font-semibold mb-2">Lightning Fast</h3>
                         <p className="text-sidebar-foreground/70">
@@ -83,9 +83,9 @@ const LandingPage = () => {
                         </p>
                     </div>
                     
-                    <div className="p-6 rounded-2xl border border-border hover:border-[#10a37f] transition-all">
-                        <div className="w-12 h-12 rounded-xl bg-[#10a37f]/10 flex items-center justify-center mb-4">
-                            <Sparkles size={24} className="text-[#10a37f]" />
+                    <div className="p-6 rounded-2xl border border-border hover:border-(--button-primary) transition-all">
+                        <div className="w-12 h-12 rounded-xl bg-(--button-primary)/10 flex items-center justify-center mb-4">
+                            <Sparkles size={24} className="text-(--button-primary)" />
                         </div>
                         <h3 className="text-xl font-semibold mb-2">Creative & Smart</h3>
                         <p className="text-sidebar-foreground/70">
@@ -93,9 +93,9 @@ const LandingPage = () => {
                         </p>
                     </div>
                     
-                    <div className="p-6 rounded-2xl border border-border hover:border-[#10a37f] transition-all">
-                        <div className="w-12 h-12 rounded-xl bg-[#10a37f]/10 flex items-center justify-center mb-4">
-                            <Shield size={24} className="text-[#10a37f]" />
+                    <div className="p-6 rounded-2xl border border-border hover:border-(--button-primary) transition-all">
+                        <div className="w-12 h-12 rounded-xl bg-(--button-primary)/10 flex items-center justify-center mb-4">
+                            <Shield size={24} className="text-(--button-primary)" />
                         </div>
                         <h3 className="text-xl font-semibold mb-2">Secure & Private</h3>
                         <p className="text-sidebar-foreground/70">

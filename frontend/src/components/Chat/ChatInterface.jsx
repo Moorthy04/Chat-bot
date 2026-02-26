@@ -1,16 +1,13 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
 import MessageList from './MessageList';
 import ChatInput from './ChatInput';
-import { Sun, Moon, Bot, MessageSquare, Sparkles, Zap, Shield, Menu, ChevronDown } from 'lucide-react';
+import { Sun, Moon, Bot, Zap, Menu, ArrowDown } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import { useChat } from '../../context/ChatContext';
-import { cn } from '../../utils/cn';
 import { motion, AnimatePresence } from 'framer-motion';
 import ChatContainer from './ChatContainer';
 
 const ChatInterface = ({ isSidebarOpen = true, setIsSidebarOpen, isMobile }) => {
-    const navigate = useNavigate();
     const { theme, toggleTheme } = useTheme();
     const {
         getActiveChat,
@@ -190,9 +187,9 @@ const ChatInterface = ({ isSidebarOpen = true, setIsSidebarOpen, isMobile }) => 
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.8, y: 10 }}
                             onClick={() => scrollToBottom()}
-                            className="absolute bottom-4 left-1/2 -translate-x-1/2 p-1 rounded-full bg-(--sidebar-bg) border border-border shadow-lg hover:bg-(--hover-bg) transition-colors z-1 text-foreground/60 hover:text-foreground cursor-pointer"                            aria-label="Scroll to bottom"
+                            className="absolute bottom-4 left-1/2 -translate-x-1/2 p-1 rounded-full bg-(--background) border border-(--border) shadow-lg hover:bg-(--hover-bg) transition-colors z-1 text-foreground/60 hover:text-foreground cursor-pointer"                            aria-label="Scroll to bottom"
                         >
-                            <ChevronDown size={20} />
+                            <ArrowDown size={20} />
                         </motion.button>
                     )}
                 </AnimatePresence>

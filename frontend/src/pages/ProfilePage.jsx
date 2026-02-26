@@ -352,7 +352,7 @@ const ProfilePage = () => {
                                                     value={passwordData.old_password}
                                                     onChange={handlePasswordInputChange('old_password')}
                                                     className={cn(
-                                                        "w-full px-4 py-3 rounded-lg border bg-(--input-bg) outline-none focus:border-[#10a37f] transition-all pr-10",
+                                                        "w-full px-4 py-3 rounded-lg border bg-(--input-bg) outline-none focus:border-(--button-primary) transition-all pr-10",
                                                         passwordErrors.old_password ? "border-red-500" : "border-(--border)"
                                                     )}
                                                 />
@@ -378,7 +378,7 @@ const ProfilePage = () => {
                                                     value={passwordData.new_password}
                                                     onChange={handlePasswordInputChange('new_password')}
                                                     className={cn(
-                                                        "w-full px-4 py-3 rounded-lg border bg-(--input-bg) outline-none focus:border-[#10a37f] transition-all pr-10",
+                                                        "w-full px-4 py-3 rounded-lg border bg-(--input-bg) outline-none focus:border-(--button-primary) transition-all pr-10",
                                                         passwordErrors.new_password ? "border-red-500" : "border-(--border)"
                                                     )}
                                                 />
@@ -404,7 +404,7 @@ const ProfilePage = () => {
                                                     value={passwordData.confirm_new_password}
                                                     onChange={handlePasswordInputChange('confirm_new_password')}
                                                     className={cn(
-                                                        "w-full px-4 py-3 rounded-lg border bg-(--input-bg) outline-none focus:border-[#10a37f] transition-all pr-10",
+                                                        "w-full px-4 py-3 rounded-lg border bg-(--input-bg) outline-none focus:border-(--button-primary) transition-all pr-10",
                                                         passwordErrors.confirm_new_password ? "border-red-500" : "border-(--border)"
                                                     )}
                                                 />
@@ -425,7 +425,7 @@ const ProfilePage = () => {
                                         <button
                                             type="submit"
                                             disabled={isChangingPassword}
-                                            className="w-full bg-[#10a37f] hover:bg-[#1a7f64] text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-[#10a37f]/20 flex items-center justify-center cursor-pointer"
+                                            className="w-full bg-(--button-primary) hover:bg-(--button-primary-hover) text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-[#10a37f]/20 flex items-center justify-center cursor-pointer"
                                         >
                                             {isChangingPassword ? (
                                                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>

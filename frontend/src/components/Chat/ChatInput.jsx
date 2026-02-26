@@ -335,7 +335,7 @@ const ChatInput = ({
                                                         type="button"
                                                         onClick={() => { setSelectedModel(m.id); setIsModelSelectorOpen(false); }}
                                                         className={cn(
-                                                            "w-full flex items-center gap-3 px-4 py-2.5 hover:bg-(--hover-bg) transition-colors text-left group",
+                                                            "w-full flex items-center gap-3 px-4 py-2.5 hover:bg-(--hover-bg) transition-colors text-left group cursor-pointer",
                                                             selectedModel === m.id && "bg-(--active-bg)"
                                                         )}
                                                     >

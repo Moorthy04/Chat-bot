@@ -81,7 +81,7 @@ const SignupPage = () => {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between items-center h-16">
                         <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-                            <Bot size={28} className="text-[#10a37f]" />
+                            <Bot size={28} className="text-(--button-primary)" />
                             <span className="text-xl font-bold">ChatBot</span>
                         </Link>
                         <div className="flex items-center gap-4">
@@ -115,7 +115,7 @@ const SignupPage = () => {
                                 required
                                 value={username}
                                 onChange={handleUsernameChange}
-                                className={`w-full px-4 py-3 rounded-lg border bg-background text-foreground focus:border-[#10a37f] focus:ring-1 focus:ring-[#10a37f] outline-none transition-all ${errors.username ? 'border-red-500' : 'border-border'}`}
+                                className={`w-full px-4 py-3 rounded-lg border bg-background text-foreground focus:border-(--button-primary) focus:ring-1 focus:ring-(--button-primary) outline-none transition-all ${errors.username ? 'border-red-500' : 'border-border'}`}
                                 placeholder="Username"
                             />
                             {errors.username && (
@@ -129,7 +129,7 @@ const SignupPage = () => {
                                 required
                                 value={email}
                                 onChange={handleInputChange('email', setEmail)}
-                                className={`w-full px-4 py-3 rounded-lg border bg-background text-foreground focus:border-[#10a37f] focus:ring-1 focus:ring-[#10a37f] outline-none transition-all ${errors.email ? 'border-red-500' : 'border-border'}`}
+                                className={`w-full px-4 py-3 rounded-lg border bg-background text-foreground focus:border-(--button-primary) focus:ring-1 focus:ring-(--button-primary) outline-none transition-all ${errors.email ? 'border-red-500' : 'border-border'}`}
                                 placeholder="name@example.com"
                             />
                             {errors.email && (
@@ -144,7 +144,7 @@ const SignupPage = () => {
                                     required
                                     value={password}
                                     onChange={handleInputChange('password', setPassword)}
-                                    className={`w-full px-4 py-3 rounded-lg border bg-background text-foreground focus:border-[#10a37f] focus:ring-1 focus:ring-[#10a37f] outline-none transition-all pr-12 ${errors.password ? 'border-red-500' : 'border-border'}`}
+                                    className={`w-full px-4 py-3 rounded-lg border bg-background text-foreground focus:border-(--button-primary) focus:ring-1 focus:ring-(--button-primary) outline-none transition-all pr-12 ${errors.password ? 'border-red-500' : 'border-border'}`}
                                     placeholder="Create password"
                                 />
                                 <button
@@ -167,7 +167,7 @@ const SignupPage = () => {
                                     required
                                     value={confirmPassword}
                                     onChange={handleInputChange('confirm_password', setConfirmPassword)}
-                                    className={`w-full px-4 py-3 rounded-lg border bg-background text-foreground focus:border-[#10a37f] focus:ring-1 focus:ring-[#10a37f] outline-none transition-all pr-12 ${errors.confirm_password ? 'border-red-500' : 'border-border'}`}
+                                    className={`w-full px-4 py-3 rounded-lg border bg-background text-foreground focus:border-(--button-primary) focus:ring-1 focus:ring-(--button-primary) outline-none transition-all pr-12 ${errors.confirm_password ? 'border-red-500' : 'border-border'}`}
                                     placeholder="Confirm password"
                                 />
                                 <button
@@ -185,7 +185,7 @@ const SignupPage = () => {
                         <div className="pt-2">
                             <button
                                 type="submit"
-                                className="w-full bg-[#10a37f] hover:bg-[#1a7f64] hover:cursor-pointer text-white font-semibold py-3 rounded-lg transition-colors"
+                                className="w-full bg-(--button-primary) hover:bg-(--button-primary-hover) hover:cursor-pointer text-white font-semibold py-3 rounded-lg transition-colors"
                             >
                                 Continue
                             </button>
@@ -199,7 +199,7 @@ const SignupPage = () => {
 
                     <p className="text-center text-sm">
                         Already have an account?{' '}
-                        <Link to="/login" className="text-[#10a37f] hover:underline">
+                        <Link to="/login" className="text-(--button-primary) hover:underline">
                             Log in
                         </Link>
                     </p>

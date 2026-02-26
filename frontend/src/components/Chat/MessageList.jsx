@@ -9,7 +9,6 @@ import { BASE_URL } from '../../utils/api';
 
 const CopyButton = ({ text }) => {
     const [copied, setCopied] = useState(false);
-
     const handleCopy = () => {
         navigator.clipboard.writeText(text);
         setCopied(true);
@@ -106,7 +105,7 @@ const MessageList = ({ messages, isSidebarOpen = true, isResponding, isMobile })
                                 <div className={cn(
                                     "px-4 py-2.5 rounded-[20px] text-[15px] leading-relaxed transition-all",
                                     msg.role === 'user'
-                                        ? 'bg-(--user-msg-bg) text-white rounded-tr-none shadow-md shadow-(--user-msg-bg)/10 font-medium'
+                                        ? 'bg-(--user-msg-bg) text-(--user-msg-text) rounded-tr-md shadow-md shadow-(--user-msg-bg)/10 font-normal'
                                         : 'bg-transparent text-foreground/90'
                                 )}>
                                     {msg.role === 'user' ? (
