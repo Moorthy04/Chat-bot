@@ -146,7 +146,7 @@ const ChatInterface = ({ isSidebarOpen = true, setIsSidebarOpen, isMobile }) => 
             {/* Messages Area */}
             <div className="flex-1 relative overflow-hidden">
                 <div
-                    className="h-full overflow-y-auto scrollbar-none"
+                    className="h-full overflow-y-auto"
                     ref={messagesContainerRef}
                 >
                     {chatLoading && activeChatId ? (

@@ -35,7 +35,7 @@ class AIEngine:
             error_str = str(e).upper()
             if "429" in error_str or "RESOURCE_EXHAUSTED" in error_str:
                 model_name = model.upper()
-                yield f"\n\n⚠️ {model_name} is currently unavailable. Try switching to other models! 🙏\n"
+                yield f"\n\n⚠️ {model_name} is currently unavailable. Try switching to other models! \n"
             else:
                 yield f"\n\n**[Error]** {str(e)}\n"
 
