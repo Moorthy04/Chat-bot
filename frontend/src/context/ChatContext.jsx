@@ -186,7 +186,9 @@ export const ChatProvider = ({ children }) => {
     if (!currentChatId) {
       try {
         const newChat = await api.post('/api/conversations/', {
-          title: content.slice(0, 30) || 'New Chat',
+          // Use a sentinel title so backend can safely auto-generate once
+          // after the first assistant response finishes.
+          title: 'New Chat',
           model: selectedModel
         });
         newChat.messages = [];
@@ -277,6 +279,21 @@ export const ChatProvider = ({ children }) => {
 
       if (assistantContent.includes('switching to other models')) {
         setShowExhaustionBanner(true);
+      }
+
+      // Refresh conversation so sidebar picks up the auto-generated title.
+      // Backend will only overwrite when the title is still the default.
+      try {
+        const fullChat = await api.get(`/api/conversations/${currentChatId}/`);
+        setChats(prev =>
+          prev.map(chat =>
+            chat.id === currentChatId
+              ? { ...chat, title: fullChat.title, name: fullChat.title }
+              : chat
+          )
+        );
+      } catch (e) {
+        // Title update is best-effort; don't disrupt streaming UX.
       }
 
     } catch (err) {

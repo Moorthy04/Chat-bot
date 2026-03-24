@@ -109,18 +109,9 @@ class ChatStreamView(APIView):
             for msg in reversed(history_msgs)
         ]
 
-        # 4️⃣ Pre-compute title if needed (DB write — before generator starts)
+        # 4️⃣ Prepare AI engine.
+        # Chat title will be auto-generated once the assistant finishes streaming.
         ai_engine = AIEngine()
-        if conversation.title == 'New Chat' or not conversation.title:
-            try:
-                new_title = ai_engine.generate_title(
-                    user_message_content,
-                    model=model
-                )
-                conversation.title = new_title
-            except Exception:
-                conversation.title = (user_message_content[:30] + "...") if len(user_message_content) > 30 else user_message_content
-            conversation.save()
 
         # 5️⃣ Generator — NO DB reads here, only AI streaming + yielding
         def stream_generator():
@@ -153,6 +144,25 @@ class ChatStreamView(APIView):
                     )
                 except Exception:
                     pass  # Don't crash if save fails after streaming
+
+                # Auto-generate chat title after the first assistant response completes.
+                # To avoid overwriting user-renamed chats, only update when the title
+                # is still the default sentinel value.
+                try:
+                    DEFAULT_TITLE = 'New Chat'
+                    if assistant_content and ('[Error]' not in assistant_content):
+                        new_title = ai_engine.generate_title(
+                            user_message_content,
+                            assistant_content,
+                            model=model
+                        )
+                        Conversation.objects.filter(
+                            id=conversation.id,
+                            user=request.user,
+                            title=DEFAULT_TITLE
+                        ).update(title=new_title)
+                except Exception:
+                    pass
                 yield b"data: [DONE]\n\n"
 
         response = StreamingHttpResponse(

@@ -80,7 +80,73 @@ class AIEngine:
             if chunk.text:
                 yield chunk.text
 
-    def generate_title(self, user_message, model="gemini-2.5-flash"):
-        """Generate a concise title"""
-        words = user_message.split()[:5]
-        return " ".join(words) + ("..." if len(user_message.split()) > 5 else "")
+    def generate_title(self, user_message, assistant_response=None, model="gemini"):
+        """Generate a concise title from user + assistant text.
+
+        Returns a short, human-friendly string intended for chat sidebar display.
+        """
+        user_words = user_message.split()
+        fallback = " ".join(user_words[:5]) + ("..." if len(user_words) > 5 else "")
+
+        # If we can't generate with the model, at least keep things stable.
+        assistant_response = assistant_response or ""
+        if not user_message.strip():
+            return fallback
+
+        client = self._get_client(model)
+        if not client:
+            return fallback
+
+        # Prevent very large prompts from title generation.
+        user_message_for_prompt = user_message[:2000]
+        assistant_response_for_prompt = assistant_response[:6000]
+
+        prompt = (
+            "Create a concise chat title that summarizes the conversation.\n"
+            "Rules:\n"
+            "- Maximum 8 words.\n"
+            "- Return only the title text (no quotes, no punctuation like leading ':'), and no extra commentary.\n"
+            "- Avoid generic titles like \"New Chat\".\n\n"
+            f"User message:\n{user_message_for_prompt}\n\n"
+            f"Assistant response:\n{assistant_response_for_prompt}\n"
+        )
+
+        try:
+            contents = [
+                types.Content(
+                    role="user",
+                    parts=[types.Part.from_text(text=prompt)]
+                )
+            ]
+
+            # Use streaming because it is already integrated in this codebase.
+            response = client.models.generate_content_stream(
+                model=self.gemini_model_name,
+                contents=contents,
+                config=types.GenerateContentConfig(temperature=0.2)
+            )
+
+            title_text = ""
+            for chunk in response:
+                if getattr(chunk, "text", None):
+                    title_text += chunk.text
+
+            title_text = title_text.strip()
+            if not title_text:
+                return fallback
+
+            # Normalize output: use first line and strip common wrappers.
+            import re
+            title_text = title_text.splitlines()[0].strip()
+            title_text = title_text.strip("\"' \t\r\n")
+            title_text = re.sub(r'^(title|chat title|name)\\s*:\\s*', '', title_text, flags=re.IGNORECASE)
+
+            words = title_text.split()
+            if not words:
+                return fallback
+            if len(words) > 8:
+                title_text = " ".join(words[:8])
+
+            return title_text
+        except Exception:
+            return fallback
